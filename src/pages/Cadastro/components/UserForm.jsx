@@ -20,7 +20,6 @@ const UserForm = ({ open, setOpen, editingRow, setClientes, handleClose }) => {
 
   useEffect(() => {
     if (editingRow) {
-        console.log(editingRow);
         
       setNewPerson({
         nome: editingRow.nome,

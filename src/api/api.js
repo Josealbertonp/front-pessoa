@@ -8,8 +8,8 @@ const api = axios.create({
 // Função para obter todos os usuários
 export const getUsers = async () => {
   try {
-    const response = await api.get('');
-    console.log('Resposta de getUsers:', response);
+    const response = await api.get('/pessoas');
+
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar usuários:', error);
