@@ -20,7 +20,7 @@ export const getUsers = async () => {
 // Função para cadastrar um usuário
 export const addUser = async (user) => {
   try {
-    const response = await api.post('/cadastrar', user);
+    const response = await api.post('/pessoas/cadastrar', user);
     return response.data;
   } catch (error) {
     console.error('Erro ao adicionar usuário:', error);
@@ -31,7 +31,7 @@ export const addUser = async (user) => {
 // Função para editar um usuário
 export const editUser = async (id, user) => {
   try {
-    const response = await api.put(`/alterar/${id}`, user);
+    const response = await api.put(`/pessoas/alterar/${id}`, user);
     return response.data;
   } catch (error) {
     console.error('Erro ao editar usuário:', error);
@@ -42,7 +42,7 @@ export const editUser = async (id, user) => {
 // Função para excluir um usuário
 export const deleteUser = async (id) => {
   try {
-    await api.delete(`/deletar/${id}`);
+    await api.delete(`/pessoas/deletar/${id}`);
   } catch (error) {
     console.error('Erro ao excluir usuário:', error);
     throw error;
