@@ -100,7 +100,6 @@ const UserForm = ({ open, setOpen, editingRow, setClientes, handleClose }) => {
         severity: 'success',
       });
   
-      setOpen(false);
   
     } catch (error) {
       console.error('Erro ao salvar usuário:', error);
@@ -125,16 +124,25 @@ const UserForm = ({ open, setOpen, editingRow, setClientes, handleClose }) => {
       }
     }
   };
-  
 
+  const handleCpfChange = (e) => {
+    let rawCpf = e.target.value.replace(/\D/g, '');
+    if (rawCpf.length <= 11) { 
+      setNewPerson({ ...newPerson, cpf: formatCPF(rawCpf) });
+    }
+  };
+  
   useEffect(() => {
-    if (alert.open) {
+    if (alert.open && alert.severity === 'success') {
       const timer = setTimeout(() => {
         setAlert({ ...alert, open: false });
-      }, 4000);
+        setOpen(false);
+      }, 2000);
+      
       return () => clearTimeout(timer);
     }
-  }, [alert]);
+  }, [alert, setOpen]);
+  
 
   return (
     <Dialog open={open} onClose={() => setOpen(false)}>
@@ -163,10 +171,14 @@ const UserForm = ({ open, setOpen, editingRow, setClientes, handleClose }) => {
           variant="outlined"
           fullWidth
           value={newPerson.cpf}
-          onChange={(e) => setNewPerson({ ...newPerson, cpf: formatCPF(e.target.value) })}
+          onChange={handleCpfChange}
           error={!!errors.cpf}
           helperText={errors.cpf}
-          slotProps={{ maxLength: 14 }}
+          slotProps={{
+            input: {
+              maxLength: 14, 
+            },
+          }}
           style={{ marginBottom: '16px' }}
         />
         <TextField
