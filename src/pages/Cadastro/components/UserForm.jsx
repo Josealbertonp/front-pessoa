@@ -72,86 +72,105 @@ const UserForm = ({ open, setOpen, editingRow, setClientes, handleClose }) => {
 
   const handleSaveClick = async () => {
     if (!validateFields()) return;
-  
+
     const unformattedCPF = newPerson.cpf.replace(/\D/g, '');
-    const personToAdd = { 
-      ...newPerson, 
-      cpf: unformattedCPF, 
-      dataNascimento: newPerson.dataNascimento 
+    const personToAdd = {
+      ...newPerson,
+      cpf: unformattedCPF,
+      dataNascimento: newPerson.dataNascimento
     };
-  
+
     try {
       if (editingRow) {
         await editUser(editingRow.id, personToAdd);
-  
+
         setClientes((prevRows) =>
           prevRows.map((row) =>
             row.id === editingRow.id ? { ...personToAdd, id: editingRow.id } : row
           )
         );
       } else {
-        const newUser = await addUser(personToAdd);
-        setClientes((prevRows) => [...prevRows, newUser]);
+        await addUser(personToAdd);
+
+        setClientes((prevRows) => [...prevRows, personToAdd]);
       }
-  
+
       setAlert({
         open: true,
         message: editingRow ? 'Usuário atualizado com sucesso!' : 'Usuário adicionado com sucesso!',
         severity: 'success',
       });
-  
-  
+
+
     } catch (error) {
-      console.error('Erro ao salvar usuário:', error);
-  
-      if (error.response && error.response.data && error.response.data.fieldErrors) {
-        const fieldErrors = error.response.data.fieldErrors;
-        const errorMessage = Object.entries(fieldErrors)
-          .map(([field, message]) => `${message}`)
-          .join('<br/>');
-  
-        setAlert({
-          open: true,
-          message: errorMessage,
-          severity: 'error',
-        });
+
+      if (error.response && error.response.data) {
+        const errorData = error.response.data;
+
+        if (errorData.fieldErrors) {
+          const fieldErrors = errorData.fieldErrors;
+          const errorMessage = Object.entries(fieldErrors)
+            .map(([field, message]) => `${message}`)
+            .join('<br/>');
+
+          setAlert({
+            open: true,
+            message: errorMessage,
+            severity: 'error',
+          });
+
+        } else if (errorData) {
+          setAlert({
+            open: true,
+            message: errorData,
+            severity: 'error',
+          });
+
+        } else {
+          setAlert({
+            open: true,
+            message: 'Ocorreu um erro ao salvar o usuário. Tente novamente.',
+            severity: 'error',
+          });
+        }
       } else {
         setAlert({
           open: true,
-          message: 'Ocorreu um erro ao salvar o usuário. Tente novamente.',
+          message: 'Erro desconhecido. Tente novamente.',
           severity: 'error',
         });
       }
+
     }
   };
 
   const handleCpfChange = (e) => {
     let rawCpf = e.target.value.replace(/\D/g, '');
-    if (rawCpf.length <= 11) { 
+    if (rawCpf.length <= 11) {
       setNewPerson({ ...newPerson, cpf: formatCPF(rawCpf) });
     }
   };
-  
+
   useEffect(() => {
     if (alert.open && alert.severity === 'success') {
       const timer = setTimeout(() => {
         setAlert({ ...alert, open: false });
         setOpen(false);
       }, 2000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [alert, setOpen]);
-  
+
 
   return (
     <Dialog open={open} onClose={() => setOpen(false)}>
       <DialogTitle>{editingRow ? 'Editar Pessoa' : 'Adicionar Pessoa'}</DialogTitle>
       <DialogContent>
         {alert.open && (
-          <Alert 
-            severity={alert.severity} 
-            onClose={() => setAlert({ ...alert, open: false })} 
+          <Alert
+            severity={alert.severity}
+            onClose={() => setAlert({ ...alert, open: false })}
             style={{ marginBottom: '16px' }}
           >
             <span dangerouslySetInnerHTML={{ __html: alert.message }} />
@@ -176,7 +195,7 @@ const UserForm = ({ open, setOpen, editingRow, setClientes, handleClose }) => {
           helperText={errors.cpf}
           slotProps={{
             input: {
-              maxLength: 14, 
+              maxLength: 14,
             },
           }}
           style={{ marginBottom: '16px' }}
@@ -188,7 +207,7 @@ const UserForm = ({ open, setOpen, editingRow, setClientes, handleClose }) => {
           type="date"
           value={newPerson.dataNascimento}
           onChange={(e) => setNewPerson({ ...newPerson, dataNascimento: e.target.value })}
-          InputLabelProps={{ shrink: true }}
+          slotProps={{ shrink: true }}
           error={!!errors.dataNascimento}
           helperText={errors.dataNascimento}
           style={{ marginBottom: '16px' }}

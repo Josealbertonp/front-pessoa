@@ -66,7 +66,7 @@ const UserRegistration = () => {
   };
 
   const filteredClientes = clientes.filter((cliente) =>
-    cliente.nome.toLowerCase().includes(search.toLowerCase())
+    cliente.nome?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
