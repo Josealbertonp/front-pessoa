@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, TextField, Button, Alert } from '@mui/material';
 import { addUser, editUser } from '../../../api/api';
 import { formatCPF, isValidCPF, isValidEmail } from '../Utils/utils';
 
@@ -10,7 +10,7 @@ const UserForm = ({ open, setOpen, editingRow, setClientes, handleClose }) => {
     dataNascimento: '',
     email: '',
   });
-  
+
   const [errors, setErrors] = useState({
     cpf: '',
     email: '',
@@ -18,9 +18,10 @@ const UserForm = ({ open, setOpen, editingRow, setClientes, handleClose }) => {
     dataNascimento: '',
   });
 
+  const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
+
   useEffect(() => {
     if (editingRow) {
-        
       setNewPerson({
         nome: editingRow.nome,
         cpf: formatCPF(editingRow.cpf),
@@ -35,11 +36,6 @@ const UserForm = ({ open, setOpen, editingRow, setClientes, handleClose }) => {
   const validateFields = () => {
     let isValid = true;
     const newErrors = { cpf: '', email: '', nome: '', dataNascimento: '' };
-
-    if (!newPerson.nome) {
-      newErrors.nome = 'Nome é obrigatório';
-      isValid = false;
-    }
 
     if (!newPerson.cpf) {
       newErrors.cpf = 'CPF é obrigatório';
@@ -62,8 +58,6 @@ const UserForm = ({ open, setOpen, editingRow, setClientes, handleClose }) => {
       isValid = false;
     }
 
-    // Validação da data de nascimento
-    const currentYear = new Date().getFullYear();
     const limitYear = 2025;
     const birthYear = new Date(newPerson.dataNascimento).getFullYear();
 
@@ -78,41 +72,90 @@ const UserForm = ({ open, setOpen, editingRow, setClientes, handleClose }) => {
 
   const handleSaveClick = async () => {
     if (!validateFields()) return;
-
+  
     const unformattedCPF = newPerson.cpf.replace(/\D/g, '');
-    const personToAdd = { ...newPerson, cpf: unformattedCPF, dataNascimento: newPerson.dataNascimento };
-
+    const personToAdd = { 
+      ...newPerson, 
+      cpf: unformattedCPF, 
+      dataNascimento: newPerson.dataNascimento 
+    };
+  
     try {
       if (editingRow) {
         await editUser(editingRow.id, personToAdd);
+  
         setClientes((prevRows) =>
-          prevRows.map((row) => (row.id === editingRow.id ? personToAdd : row))
+          prevRows.map((row) =>
+            row.id === editingRow.id ? { ...personToAdd, id: editingRow.id } : row
+          )
         );
       } else {
         const newUser = await addUser(personToAdd);
         setClientes((prevRows) => [...prevRows, newUser]);
       }
+  
+      setAlert({
+        open: true,
+        message: editingRow ? 'Usuário atualizado com sucesso!' : 'Usuário adicionado com sucesso!',
+        severity: 'success',
+      });
+  
       setOpen(false);
-      handleClose();
-      setNewPerson({ nome: '', cpf: '', dataNascimento: '', email: '' });
-      setErrors({ cpf: '', email: '', nome: '', dataNascimento: '' });
+  
     } catch (error) {
       console.error('Erro ao salvar usuário:', error);
+  
+      if (error.response && error.response.data && error.response.data.fieldErrors) {
+        const fieldErrors = error.response.data.fieldErrors;
+        const errorMessage = Object.entries(fieldErrors)
+          .map(([field, message]) => `${message}`)
+          .join('<br/>');
+  
+        setAlert({
+          open: true,
+          message: errorMessage,
+          severity: 'error',
+        });
+      } else {
+        setAlert({
+          open: true,
+          message: 'Ocorreu um erro ao salvar o usuário. Tente novamente.',
+          severity: 'error',
+        });
+      }
     }
   };
+  
+
+  useEffect(() => {
+    if (alert.open) {
+      const timer = setTimeout(() => {
+        setAlert({ ...alert, open: false });
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [alert]);
 
   return (
     <Dialog open={open} onClose={() => setOpen(false)}>
       <DialogTitle>{editingRow ? 'Editar Pessoa' : 'Adicionar Pessoa'}</DialogTitle>
       <DialogContent>
+        {alert.open && (
+          <Alert 
+            severity={alert.severity} 
+            onClose={() => setAlert({ ...alert, open: false })} 
+            style={{ marginBottom: '16px' }}
+          >
+            <span dangerouslySetInnerHTML={{ __html: alert.message }} />
+          </Alert>
+        )}
+
         <TextField
           label="Nome"
           variant="outlined"
           fullWidth
           value={newPerson.nome}
           onChange={(e) => setNewPerson({ ...newPerson, nome: e.target.value })}
-          error={!!errors.nome}
-          helperText={errors.nome}
           style={{ marginBottom: '16px' }}
         />
         <TextField
@@ -123,6 +166,7 @@ const UserForm = ({ open, setOpen, editingRow, setClientes, handleClose }) => {
           onChange={(e) => setNewPerson({ ...newPerson, cpf: formatCPF(e.target.value) })}
           error={!!errors.cpf}
           helperText={errors.cpf}
+          slotProps={{ maxLength: 14 }}
           style={{ marginBottom: '16px' }}
         />
         <TextField
