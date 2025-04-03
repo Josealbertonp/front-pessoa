@@ -1,11 +1,11 @@
 import React from 'react';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton } from '@mui/material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Paper } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
 import { formatDate } from '../Utils/utils';
 
 const UserTable = ({ rows, onEdit, onDelete }) => {
   return (
-    <TableContainer>
+    <TableContainer component={Paper}  className="w-full max-h-[650px] overflow-auto border border-gray-300 rounded-lg shadow">
       <Table>
         <TableHead>
           <TableRow>
