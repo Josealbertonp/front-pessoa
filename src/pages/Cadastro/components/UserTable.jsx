@@ -1,7 +1,7 @@
 import React from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Paper } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
-import { formatDate } from '../Utils/utils';
+import { formatDate, formatCPF } from '../Utils/utils';
 
 const UserTable = ({ rows, onEdit, onDelete }) => {
   return (
@@ -21,7 +21,7 @@ const UserTable = ({ rows, onEdit, onDelete }) => {
             <TableRow key={row.id}>
               <TableCell>{row.nome}</TableCell>
               <TableCell>{row.email}</TableCell>
-              <TableCell>{row.cpf}</TableCell>
+              <TableCell>{formatCPF(row.cpf)}</TableCell>
               <TableCell>{formatDate(row.dataNascimento)}</TableCell>
               <TableCell>
                 <IconButton color="primary" onClick={() => onEdit(row)}>
